@@ -10,7 +10,15 @@ function useState(initialValue) {
   }
   return [state, setState];
 }
-var [foo, setFoo] = useState(0); // using array destructuring
-console.log(foo()); // logs 0 - the initialValue we gave
-setFoo(1); // sets _val inside useState's scope
-console.log(foo()); // logs 1 - new initialValue, despite exact same call
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  return {
+    click: () => setCount(count() + 1),
+    render: () => console.log(count())
+  };
+}
+const counter = Counter();
+counter.render();
+counter.click();
+counter.render();
