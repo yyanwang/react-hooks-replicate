@@ -13,7 +13,7 @@ function useState(initialValue) {
 // console.log(foo); // logs 0 - oops!!
 
 const MyReact = (function() {
-  let _val;
+  let _val, _deps;
   return {
     render: Component => {
       const Comp = Component();
@@ -26,11 +26,24 @@ const MyReact = (function() {
         _val = newState;
       }
       return [_val, setState];
+    },
+    useEffect: (callback, deps) => {
+      const hasNoDeps = !deps;
+      const hasDepsChange = _deps
+        ? deps.some((dep, i) => dep !== _deps[i])
+        : true;
+      if (hasNoDeps || hasDepsChange) {
+        callback();
+        _deps = deps;
+      }
     }
   };
 })();
 function Counter() {
   const [count, setCount] = MyReact.useState(0);
+  MyReact.useEffect(() => {
+    console.log("effect", count);
+  }, [count]);
   return {
     click: () => setCount(count + 1),
     render: () => console.log(count)
