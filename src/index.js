@@ -13,43 +13,50 @@ function useState(initialValue) {
 // console.log(foo); // logs 0 - oops!!
 
 const MyReact = (function() {
-  let _val, _deps;
+  let hooks = [];
+  let currentHook = 0;
   return {
     render: Component => {
       const Comp = Component();
       Comp.render();
+      currentHook = 0;
       return Comp;
     },
     useState: initialValue => {
-      _val = _val || initialValue;
+      hooks[currentHook] = hooks[currentHook] || initialValue;
+      const currentHookIndex = currentHook;
       function setState(newState) {
-        _val = newState;
+        hooks[currentHookIndex] = newState;
       }
-      return [_val, setState];
+      return [hooks[currentHook++], setState];
     },
     useEffect: (callback, deps) => {
       const hasNoDeps = !deps;
-      const hasDepsChange = _deps
-        ? deps.some((dep, i) => dep !== _deps[i])
+      const hasDepsChange = hooks[currentHook]
+        ? deps.some((dep, i) => !Object.is(dep, hooks[currentHook][i]))
         : true;
       if (hasNoDeps || hasDepsChange) {
         callback();
-        _deps = deps;
+        hooks[currentHook] = deps;
       }
+      currentHook++;
     }
   };
 })();
 function Counter() {
   const [count, setCount] = MyReact.useState(0);
+  const [text, setText] = MyReact.useState('');
   MyReact.useEffect(() => {
     console.log("effect", count);
   }, [count]);
   return {
     click: () => setCount(count + 1),
-    render: () => console.log(count)
+    changeText: newText => setText(newText),
+    render: () => console.log(count,text),
   };
 }
 let counter;
 counter = MyReact.render(Counter);
 counter.click();
+counter.changeText('Orange');
 counter = MyReact.render(Counter);
